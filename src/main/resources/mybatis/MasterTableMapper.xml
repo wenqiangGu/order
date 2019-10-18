@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gwq.order.dao.master.MasterTableMapper">
+    <!--向订单及详情表中插入数据-->
+    <insert id="addMaster" parameterType="mastertable">
+        INSERT INTO `master_table`
+        (`ordernum`,`state`,`paystate`,`totalsum`,`name`,
+        `address`,`phone`,`createtime`,`updatetime`)
+        VALUES
+        (#{ordernum},#{state},#{paystate},#{totalsum},#{name},
+        #{address},#{phone},#{createtime},#{updatetime}) ;
+    </insert>
+
+    <insert id="addTabledetails" parameterType="tabledetails">
+        INSERT INTO `tabledetails`
+        (`ordernum`,`goodnum`,`goodname`,`price`,`num`)
+        VALUES
+        (#{ordernum},#{goodnum},#{goodname},#{price},#{num}) ;
+    </insert>
+
+    <!--获取订单列表展示数据-->
+    <select id="getMasterList" resultMap="masterTable">
+        SELECT m.id,m.ordernum,d.goodname,d.num,m.totalsum,m.name,m.address,m.phone,
+        m.state,m.createtime,d.goodnum
+        FROM `master_table` m
+        RIGHT JOIN `tabledetails` d
+        ON m.ordernum = d.ordernum
+        <where>
+            <if test="name != null and name != ''">
+                and m.name like concat('%',#{name},'%')
+            </if>
+            <if test="goodnum != null and goodnum != 0">
+                and d.goodnum = #{goodnum}
+            </if>
+        </where>
+
+        LIMIT #{pageIndex},#{pageSize}
+    </select>
+    
+    <resultMap id="masterTable" type="mastertable">
+        <id property="id" column="id"></id>
+        <association property="tabledetails" javaType="tabledetails"
+                     resultMap="td"></association>
+    </resultMap>
+
+    <resultMap id="td" type="tabledetails">
+        <result property="goodname" column="goodname"></result>
+        <result property="num" column="num"></result>
+        <result property="goodnum" column="goodnum"></result>
+    </resultMap>
+
+    <select id="getMasterListCount" resultType="int">
+        SELECT count(1)
+        FROM `master_table` m
+        RIGHT JOIN `tabledetails` d
+        ON m.ordernum = d.ordernum
+        <where>
+            <if test="name != null and name != ''">
+                and m.name like concat('%',#{name},'%')
+            </if>
+            <if test="goodnum != null and goodnum != 0">
+                and d.goodnum = #{goodnum}
+            </if>
+        </where>
+    </select>
+
+    <!--删除订单数据-->
+    <delete id="deleteMaster" parameterType="string">
+        DELETE FROM `master_table`
+        WHERE ordernum = #{ordernum}
+    </delete>
+    <delete id="deleteTabledetails" parameterType="string">
+        DELETE FROM `tabledetails`
+        WHERE ordernum = #{ordernum}
+    </delete>
+
+    <!--进入修改订单之前获取到的mastertable数据对象-->
+    <select id="getMasterTableByOrdernum" resultMap="masterTable">
+        SELECT m.id,m.ordernum,d.goodname,d.num,m.totalsum,m.name,m.address,m.phone,
+        m.state,m.createtime,d.goodnum,d.price
+        FROM `master_table` m
+        RIGHT JOIN `tabledetails` d
+        ON m.ordernum = d.ordernum
+        WHERE m.ordernum = #{ordernum}
+    </select>
+
+    <!--修改订单-->
+    <update id="updateMaster" parameterType="mastertable">
+        UPDATE `master_table`
+        <set>
+            <if test="state != null">`state` = #{state},</if>
+            <if test="totalsum != null">`totalsum` = #{totalsum},</if>
+            <if test="name != null">`name` = #{name},</if>
+            <if test="address != null">`address` = #{address},</if>
+            <if test="phone != null">`phone` = #{phone},</if>
+            <if test="updatetime != null">`updatetime` = #{updatetime},</if>
+        </set>
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="updateTabledetails" parameterType="tabledetails">
+        UPDATE `tabledetails`
+        <set>
+            <if test="goodnum != null">`goodnum` = #{goodnum},</if>
+            <if test="goodname != null">`goodname` = #{goodname},</if>
+            <if test="num != null">`num` = #{num},</if>
+        </set>
+        WHERE `id` = #{id} ;
+
+    </update>
+</mapper>
